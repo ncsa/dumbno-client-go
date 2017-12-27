@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -32,6 +33,7 @@ func (c *Client) AddACL(req FilterRequest) error {
 	if clone.Proto == "" {
 		clone.Proto = "ip"
 	}
+	clone.Proto = strings.ToLower(clone.Proto)
 	if clone.Src == "" {
 		return fmt.Errorf("AddACL: Src can not be blank")
 	}
