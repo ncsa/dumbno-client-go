@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -19,12 +20,15 @@ type FilterRequest struct {
 
 type Client struct {
 	conn net.Conn
+	//The total timeout for the request/response operation
+	Timeout time.Duration
 }
 
 func NewClient(endpoint string) (*Client, error) {
 	var c Client
 	conn, err := net.Dial("udp", endpoint)
 	c.conn = conn
+	c.Timeout = 2 * time.Second
 	return &c, err
 }
 
@@ -41,6 +45,7 @@ func (c *Client) AddACL(req FilterRequest) error {
 	if err != nil {
 		return errors.Wrap(err, "AddACL: error building json request")
 	}
+	c.conn.SetDeadline(time.Now().Add(c.Timeout))
 	_, err = c.conn.Write(bytes)
 	if err != nil {
 		return errors.Wrap(err, "AddACL: error sending json request")
