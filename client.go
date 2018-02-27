@@ -38,9 +38,6 @@ func (c *Client) AddACL(req FilterRequest) error {
 		clone.Proto = "ip"
 	}
 	clone.Proto = strings.ToLower(clone.Proto)
-	if clone.Src == "" {
-		return fmt.Errorf("AddACL: Src can not be blank")
-	}
 	bytes, err := json.Marshal(clone)
 	if err != nil {
 		return errors.Wrap(err, "AddACL: error building json request")
@@ -51,8 +48,15 @@ func (c *Client) AddACL(req FilterRequest) error {
 		return errors.Wrap(err, "AddACL: error sending json request")
 	}
 
-	resp := make([]byte, 64)
-	_, err = c.conn.Read(resp)
+	resp := make([]byte, 128)
+	n, err := c.conn.Read(resp)
+	resp = resp[:n]
 	//log.Printf("Got %d bytes in response: %s", n, string(resp))
-	return errors.Wrap(err, "AddACL: no response from api")
+	if err != nil {
+		return errors.Wrap(err, "AddACL: no response from api")
+	}
+	if string(resp) != "ok" {
+		return fmt.Errorf("AddACL: Expected 'ok', got: %q", resp)
+	}
+	return nil
 }
